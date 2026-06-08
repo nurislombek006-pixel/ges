@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
     <title>Chess Analysis Pro</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/chessboard-js/1.0.0/chessboard-1.0.0.min.css">
@@ -11,7 +11,11 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/chessboard-js/1.0.0/chessboard-1.0.0.min.js"></script>
     
     <style>
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        * { 
+            box-sizing: border-box; 
+            -webkit-tap-highlight-color: transparent; 
+            touch-action: manipulation; /* Блокирует зум при двойном тапе на смартфонах */
+        }
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             background-color: #161512;
@@ -21,7 +25,6 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            touch-action: manipulation; /* Защита от лагов двойного клика на iOS/Android */
         }
         #main-container {
             width: 100%;
@@ -30,12 +33,13 @@
             flex-direction: column;
             gap: 12px;
         }
-        /* Стили Шапки от Chess.com */
+        
+        /* Карточка итогов как на фото из Chess.com */
         .review-card {
             background: #21201d;
             border-radius: 12px;
             padding: 15px;
-            display: none; /* Появляется после анализа */
+            display: flex; /* Сразу виден до начала партии с дефолтными значениями */
             flex-direction: column;
             gap: 15px;
             box-shadow: 0 4px 10px rgba(0,0,0,0.5);
@@ -59,7 +63,7 @@
             font-size: 24px;
             border: 2px solid #81b64c;
         }
-        .player-name { font-weight: bold; font-size: 15px; margin-bottom: 4px;}
+        .player-name { font-weight: bold; font-size: 15px; margin-bottom: 4px; color: #fff; }
         .accuracy-box {
             background: #ffffff;
             color: #121212;
@@ -71,20 +75,19 @@
         }
         .accuracy-box.black-acc { background: #312e2b; color: #fff; }
         
-        /* Таблица классификации ходов */
         .stats-table { width: 100%; border-collapse: collapse; margin-top: 5px; }
         .stats-row {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 6px 0;
+            padding: 7px 0;
             border-bottom: 1px solid #2d2b28;
             font-size: 13px;
         }
         .stats-label { display: flex; align-items: center; gap: 8px; }
         .badge-icon {
-            width: 20px;
-            height: 20px;
+            width: 22px;
+            height: 22px;
             border-radius: 50%;
             display: inline-flex;
             align-items: center;
@@ -93,6 +96,7 @@
             font-weight: bold;
             color: #fff;
         }
+        
         /* Цвета Chess.com */
         .bg-brilliant { background: #1baca6; }
         .bg-great { background: #5c8bb0; }
@@ -114,7 +118,7 @@
             font-weight: bold;
         }
 
-        /* Доска и Индикаторы */
+        /* Доска и элементы оценки */
         #eval-bar-container {
             width: 100%;
             height: 14px;
@@ -129,27 +133,24 @@
         #board-wrapper { position: relative; width: 100%; }
         #board { width: 100%; }
         
-        /* Иконка вердикта прямо на клетке доски в углу */
+        /* Медаль вердикта в правом верхнем углу шахматной клетки */
         .board-move-badge {
             position: absolute;
-            right: 2px;
-            top: 2px;
-            width: 18px;
-            height: 18px;
+            right: 1px;
+            top: 1px;
+            width: 20px;
+            height: 20px;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 10px;
+            font-size: 11px;
             font-weight: bold;
             color: #fff;
             z-index: 999;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.4);
-            animation: popIn 0.2s ease-out;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.5);
         }
-        @keyframes popIn { from { transform: scale(0); } to { transform: scale(1); } }
 
-        /* Элементы управления */
         .controls { display: flex; gap: 10px; width: 100%; }
         textarea {
             width: 100%;
@@ -171,7 +172,6 @@
             cursor: pointer;
             background-color: #81b64c;
             color: white;
-            transition: background 0.2s;
         }
         button:active { background-color: #a3d16c; }
         #progress-overlay {
@@ -204,20 +204,20 @@
         <div class="players-header">
             <div class="player-block">
                 <div class="player-avatar">👤</div>
-                <div class="player-name" id="white-name">Белые</div>
+                <div class="player-name" id="white-name">Nurik2611</div>
                 <div class="accuracy-box" id="white-accuracy">0.0%</div>
             </div>
-            <div style="font-weight: 900; color: #73716e;">ВС</div>
+            <div style="font-weight: 900; color: #73716e; font-size: 18px;">VS</div>
             <div class="player-block">
                 <div class="player-avatar" style="border-color:#312e2b;">👤</div>
-                <div class="player-name" id="black-name">Черные</div>
+                <div class="player-name" id="black-name">Opponent</div>
                 <div class="accuracy-box black-acc" id="black-accuracy">0.0%</div>
             </div>
         </div>
 
         <div class="rating-box">
-            <span>Рейтинг партии:</span>
-            <span style="color:#81b64c;"><span id="white-perf">1000</span> vs <span id="black-perf">1000</span></span>
+            <span>Рейтинг партии (Performance):</span>
+            <span style="color:#81b64c;"><span id="white-perf">0</span> vs <span id="black-perf">0</span></span>
         </div>
 
         <div class="stats-table">
@@ -228,7 +228,7 @@
             <div class="stats-row"><div class="stats-label"><span class="badge-icon bg-good">✓</span> Хороший</div><div style="font-weight:bold;"><span id="w-good" style="color:#96bc4b">0</span> — <span id="b-good" style="color:#96bc4b">0</span></div></div>
             <div class="stats-row"><div class="stats-label"><span class="badge-icon bg-inaccuracy">?!</span> Неточность</div><div style="font-weight:bold;"><span id="w-inaccuracy" style="color:#f0c514">0</span> — <span id="b-inaccuracy" style="color:#f0c514">0</span></div></div>
             <div class="stats-row"><div class="stats-label"><span class="badge-icon bg-mistake">?</span> Ошибка</div><div style="font-weight:bold;"><span id="w-mistake" style="color:#ff8413">0</span> — <span id="b-mistake" style="color:#ff8413">0</span></div></div>
-            <div class="stats-row"><div class="stats-label"><span class="badge-icon bg-missed">X</span> Упущенная упущенная уп.</div><div style="font-weight:bold;"><span id="w-missed" style="color:#ff3b30">0</span> — <span id="b-missed" style="color:#ff3b30">0</span></div></div>
+            <div class="stats-row"><div class="stats-label"><span class="badge-icon bg-missed">X</span> Упущенная возможность</div><div style="font-weight:bold;"><span id="w-missed" style="color:#ff3b30">0</span> — <span id="b-missed" style="color:#ff3b30">0</span></div></div>
             <div class="stats-row"><div class="stats-label"><span class="badge-icon bg-blunder">??</span> Зевок</div><div style="font-weight:bold;"><span id="w-blunder" style="color:#b33434">0</span> — <span id="b-blunder" style="color:#b33434">0</span></div></div>
         </div>
     </div>
@@ -243,15 +243,15 @@
     </div>
 
     <div class="controls" id="input-area">
-        <textarea id="game-input" placeholder="Вставьте сюда скопированный PGN текст партии с Chess.com..."></textarea>
+        <textarea id="game-input" placeholder="Вставьте скопированный PGN партии..."></textarea>
     </div>
-    <button id="btn-analyze" onclick="startFullReview()" style="width:100%;">Запустить Полный Анализ</button>
+    <button id="btn-analyze" onclick="startFullReview()" style="width:100%;">Запустить Точный Анализ</button>
 
-    <div id="progress-overlay">Анализ партии: <span id="progress-percent">0%</span></div>
+    <div id="progress-overlay">Анализ ходов движком: <span id="progress-percent">0%</span></div>
 
     <div class="controls">
-        <button style="flex: 1; background-color: #312e2b;" onclick="moveBack()">◀ Назад</button>
-        <button style="flex: 1; background-color: #312e2b;" onclick="moveForward()">Вперед ▶</button>
+        <button style="flex: 1; background-color: #312e2b;" onclick="moveBack()">◀ Изм.</button>
+        <button style="flex: 1; background-color: #312e2b;" onclick="moveForward()">След. ▶</button>
     </div>
 
     <div id="move-log">Ходы отобразятся здесь после старта анализа...</div>
@@ -264,17 +264,16 @@
     let board = null;
     let game = new Chess();
     let movesQueue = [];
-    let analyzedMovesData = []; // Хранит оценки каждого полухода
+    let analyzedMovesData = []; 
     let currentMoveIndex = -1;
     let stockfish = null;
 
-    // Статистика игроков
     let stats = {
         w: { brilliant: 0, great: 0, best: 0, excellent: 0, good: 0, inaccuracy: 0, mistake: 0, missed: 0, blunder: 0, totalCPL: 0, count: 0 },
         b: { brilliant: 0, great: 0, best: 0, excellent: 0, good: 0, inaccuracy: 0, mistake: 0, missed: 0, blunder: 0, totalCPL: 0, count: 0 }
     };
 
-    // Обход CORS Веб-воркера Stockfish
+    // Стабильное подключение Stockfish через Web Worker
     const workerCode = "importScripts('https://cdnjs.cloudflare.com/ajax/libs/stockfish.js/10.0.2/stockfish.js');";
     const blob = new Blob([workerCode], { type: 'application/javascript' });
     stockfish = new Worker(URL.createObjectURL(blob));
@@ -285,44 +284,41 @@
         pieceTheme: 'https://chessboardjs.com/img/chesspieces/wikipedia/{piece}.png'
     });
 
-    // Очистка масштабирования по двойному клику (iOS Safari fix)
-    document.addEventListener('touchend', function (event) {
-        let now = (new Date()).getTime();
-        if (now - lastTouchEnd <= 300) { event.preventDefault(); }
-        lastTouchEnd = now;
-    }, false);
-    let lastTouchEnd = 0;
+    // Полное отключение двойного тапа (Double-tap zoom) для предотвращения лагов на iOS/Android
+    document.addEventListener('touchstart', (e) => {
+        if (e.touches.length > 1) e.preventDefault();
+    }, { passive: false });
 
-    // Считывание ответов движка во время глубокого пакетного сканирования
     let analysisResolver = null;
+    let lastFoundScore = { type: 'cp', score: 30 }; // Стартовая оценка равенства в центпешках
+
+    // Асинхронный перехватчик событий Stockfish
     stockfish.onmessage = function(event) {
         const line = event.data;
-        if (line.includes('score cp') || line.includes('score mate')) {
-            let evalType = 'cp';
-            let score = 0;
-            
-            const cpMatch = line.match(/score cp (-?\d+)/);
-            if (cpMatch) {
-                score = parseInt(cpMatch[1]);
-            } else {
-                const mateMatch = line.match(/score mate (-?\d+)/);
-                if (mateMatch) {
-                    evalType = 'mate';
-                    score = parseInt(mateMatch[1]);
-                }
-            }
-            if (analysisResolver) {
-                analysisResolver({ type: evalType, score: score });
-                analysisResolver = null;
-            }
+        
+        // Постоянно обновляем промежуточную оценку по мере углубления движка
+        if (line.includes('score cp')) {
+            const match = line.match(/score cp (-?\d+)/);
+            if (match) lastFoundScore = { type: 'cp', score: parseInt(match[1]) };
+        } else if (line.includes('score mate')) {
+            const match = line.match(/score mate (-?\d+)/);
+            if (match) lastFoundScore = { type: 'mate', score: parseInt(match[1]) };
+        }
+        
+        // Разрешаем Промис СТРОГО тогда, когда движок закончил глубокий анализ позиции и прислал 'bestmove'
+        if (line.includes('bestmove') && analysisResolver) {
+            analysisResolver(lastFoundScore);
+            analysisResolver = null;
         }
     };
 
     function getEngineEval(fen) {
         return new Promise((resolve) => {
             analysisResolver = resolve;
+            // Сбрасываем буфер перед каждым ходом
+            lastFoundScore = { type: 'cp', score: 0 }; 
             stockfish.postMessage('position fen ' + fen);
-            stockfish.postMessage('go depth 11'); // Быстрая глубина для мгновенных расчетов на смартфонах
+            stockfish.postMessage('go depth 12'); // Оптимальная глубина расчетов для мобильных процессоров
         });
     }
 
@@ -330,60 +326,56 @@
         let pgnData = document.getElementById('game-input').value.trim();
         if (!pgnData) { alert('Пожалуйста, вставьте текст PGN.'); return; }
 
-        // Безопасный парсинг мета-тегов игроков
+        // Парсинг никнеймов игроков
         const whiteMatch = pgnData.match(/\[White "([^"]+)"\]/);
         const blackMatch = pgnData.match(/\[Black "([^"]+)"\]/);
-        document.getElementById('white-name').innerText = whiteMatch ? whiteMatch[1] : 'Игрок 1';
-        document.getElementById('black-name').innerText = blackMatch ? blackMatch[1] : 'Игрок 2';
+        document.getElementById('white-name').innerText = whiteMatch ? whiteMatch[1] : 'Белые';
+        document.getElementById('black-name').innerText = blackMatch ? blackMatch[1] : 'Черные';
 
         game = new Chess();
-        // Чистим PGN от лишних кавычек или артефактов если ломается базовый лоадер
         if (!game.load_pgn(pgnData)) {
-            // Фолбэк: пробуем вырезать только строчку ходов
-            let cleanMoves = pgnData.replace(/\[.*?\]/g, '').trim();
-            if(!game.load_pgn(cleanMoves)) {
-                alert('Ошибка распознавания PGN. Проверьте правильность скопированной партии.');
-                return;
-            }
+            alert('Ошибка распознавания PGN. Проверьте валидность скопированного текста.');
+            return;
         }
 
         movesQueue = game.history({ verbose: true });
         analyzedMovesData = [];
         
-        // Сброс счетчиков
         stats = {
             w: { brilliant: 0, great: 0, best: 0, excellent: 0, good: 0, inaccuracy: 0, mistake: 0, missed: 0, blunder: 0, totalCPL: 0, count: 0 },
             b: { brilliant: 0, great: 0, best: 0, excellent: 0, good: 0, inaccuracy: 0, mistake: 0, missed: 0, blunder: 0, totalCPL: 0, count: 0 }
         };
 
-        // UI Лоадер
         document.getElementById('btn-analyze').style.display = 'none';
         document.getElementById('input-area').style.display = 'none';
         document.getElementById('progress-overlay').style.display = 'block';
 
         let tempGame = new Chess();
-        let lastEval = 0.3; // Стартовое преимущество белых
+        let previousEval = 0.3; // Стартовая базовая оценка дебюта
 
-        // Цикл последовательного прохода по всей партии
+        // ПОСЛЕДОВАТЕЛЬНЫЙ АНАЛИЗ ВСЕЙ ПАРТИИ (БЕЗ РАНДОМА)
         for (let i = 0; i < movesQueue.length; i++) {
             let move = movesQueue[i];
             tempGame.move(move.san);
             let fen = tempGame.fen();
             
             let res = await getEngineEval(fen);
+            
+            // Переводим маты в условные центипешки (+10.0 / -10.0) для расчетов
             let currentEval = res.type === 'cp' ? res.score / 100 : (res.score > 0 ? 10 : -10);
-            
-            // Если ход черных, инвертируем для расчета центипешек
-            if (move.color === 'b') { currentEval = -currentEval; }
 
-            // Вычисляем потерю центипешек (Centipawn Loss)
-            let cpl = lastEval - currentEval;
-            if (move.color === 'b') cpl = (-lastEval) - (-currentEval);
-            if (cpl < 0) cpl = 0; // Игрок нашел ход лучше оценки движка
-
-            let verdict = classifyMove(cpl, move.san);
+            // Вычисление математической потери преимущества (Centipawn Loss)
+            let cpl = 0;
+            if (move.color === 'w') {
+                cpl = previousEval - currentEval;
+            } else {
+                cpl = (-previousEval) - (-currentEval);
+            }
             
-            // Записываем статистику по цветам
+            if (cpl < 0) cpl = 0; // Игрок нашел тактику лучше, чем видел движок на прошлом полуходе
+
+            let verdict = classifyMoveDeterministic(cpl, currentEval, move.san);
+            
             let side = move.color === 'w' ? 'w' : 'b';
             stats[side][verdict]++;
             stats[side].totalCPL += cpl;
@@ -397,51 +389,54 @@
                 san: move.san
             });
 
-            lastEval = currentEval;
+            previousEval = currentEval;
 
-            // Обновление прогресс-бара
             let percent = Math.floor(((i + 1) / movesQueue.length) * 100);
             document.getElementById('progress-percent').innerText = percent + '%';
         }
 
-        // Вывод результатов на дашборд
         document.getElementById('progress-overlay').style.display = 'none';
-        document.getElementById('review-dashboard').style.display = 'flex';
-
         calculateFinalScores();
         renderMoveLog();
-        goToMove(0); // Встаем на первый ход
+        goToMove(0);
     }
 
-    function classifyMove(cpl, san) {
-        if (san.includes('#')) return 'best';
-        if (cpl <= 0.05) {
-            return Math.random() > 0.96 ? 'brilliant' : (Math.random() > 0.88 ? 'great' : 'best');
+    // Детерминированная классификация Chess.com на основе реальной потери центипешек
+    function classifyMoveDeterministic(cpl, currentEval, san) {
+        if (san.includes('#')) return 'best'; // Мат — всегда лучший ход
+        
+        // Строгие математические пороги
+        if (cpl <= 0.02) {
+            // Реализация "Блестящих" и "Замечательных" ходов на основе сложности и сохранения высокой оценки
+            if (Math.abs(currentEval) > 2.0 && (san.includes('x') || san.match(/[B-R-N-Q]/))) {
+                return 'brilliant'; 
+            }
+            if (Math.abs(currentEval) > 1.2) return 'great';
+            return 'best';
         }
-        if (cpl <= 0.20) return 'excellent';
-        if (cpl <= 0.50) return 'good';
-        if (cpl <= 0.90) return 'inaccuracy';
-        if (cpl <= 1.80) return 'mistake';
-        if (cpl > 3.00) return 'blunder';
-        return 'missed';
+        if (cpl <= 0.15) return 'excellent';
+        if (cpl <= 0.35) return 'good';
+        if (cpl <= 0.75) return 'inaccuracy';
+        if (cpl <= 1.50) return 'mistake';
+        if (cpl <= 2.50) return 'missed';
+        return 'blunder'; // Потеря больше 2.5 пешек — гарантированный зевок
     }
 
     function calculateFinalScores() {
-        // Точность по формуле потерь центипешек (Подобие алгоритма Chess.com)
         let wAvg = stats.w.count > 0 ? stats.w.totalCPL / stats.w.count : 0;
         let bAvg = stats.b.count > 0 ? stats.b.totalCPL / stats.b.count : 0;
 
-        let wAcc = Math.max(10, Math.min(100, 100 - (wAvg * 25)));
-        let bAcc = Math.max(10, Math.min(100, 100 - (bAvg * 25)));
+        // Логарифмическая формула точности (аппроксимация алгоритма CAPS от Chess.com)
+        let wAcc = Math.max(5, 100 * Math.exp(-0.45 * wAvg));
+        let bAcc = Math.max(5, 100 * Math.exp(-0.45 * bAvg));
 
         document.getElementById('white-accuracy').innerText = wAcc.toFixed(1) + '%';
         document.getElementById('black-accuracy').innerText = bAcc.toFixed(1) + '%';
 
-        // Перформанс рейтинг на основе точности
-        document.getElementById('white-perf').innerText = Math.floor(wAcc * 22);
-        document.getElementById('black-perf').innerText = Math.floor(bAcc * 22);
+        // Рассчитываем эквивалент перформанс-рейтинга партии на основе точности
+        document.getElementById('white-perf').innerText = Math.floor(wAcc * 24);
+        document.getElementById('black-perf').innerText = Math.floor(bAcc * 24);
 
-        // Заполнение таблицы ходов на экране
         const keys = ['brilliant', 'great', 'best', 'excellent', 'good', 'inaccuracy', 'mistake', 'missed', 'blunder'];
         keys.forEach(k => {
             document.getElementById(`w-${k}`).innerText = stats.w[k];
@@ -478,14 +473,13 @@
         board.position(data.fen);
         updateEvalBar(data.eval);
 
-        // Светим активный ход в логе
         document.querySelectorAll('.log-move-item').forEach(el => el.classList.remove('active'));
         document.getElementById(`log-move-${index}`).classList.add('active');
 
-        // Очищаем старые иконки вердиктов с доски
+        // Очищаем старые бейджи
         document.querySelectorAll('.board-move-badge').forEach(el => el.remove());
 
-        // Рисуем иконку Chess.com в угол нужной клетки
+        // Определение стиля и символа иконки на доске
         let badgeClass = 'bg-best';
         let badgeText = '⭐';
 
@@ -500,7 +494,7 @@
             case 'blunder': badgeClass = 'bg-blunder'; badgeText = '??'; break;
         }
 
-        // Находим DOM-элемент нужной клетки на доске
+        // Рендерим иконку строго в правый верхний угол клетки, куда сходили
         const squareEl = document.querySelector(`.square-${data.toSquare}`);
         if (squareEl) {
             const badgeHtml = `<div class="board-move-badge ${badgeClass}">${badgeText}</div>`;
@@ -513,3 +507,4 @@
 </script>
 </body>
 </html>
+
